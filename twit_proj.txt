@@ -1,0 +1,67 @@
+# importing necessary packages
+
+
+import pymongo
+import streamlit as st
+from PIL import Image
+import snscrape.modules.twitter as sntwitter
+import pandas as pd
+
+
+
+
+# creating streamlit framework
+
+
+tweet_data = []
+st.header('Twitter scraping')
+with st.form(key='Twitter_form'):
+    image = Image.open('dark_bn.png')
+    st.image(image, caption=None, width=None,
+             use_column_width=None, channels='RGB')
+    user = st.text_input('What do you want to scrape?')
+    limit = st.slider(
+        'How many tweets do you want to scrape', 0, 1000, step=10)
+    submit_button = st.form_submit_button(label='Search')
+
+
+
+# implementing the scraping part
+    
+
+     if submit_button:
+        for i, tweet in enumerate(sntwitter.TwitterSearchScraper(user).get_items()):
+            if i > limit:
+                break
+            else:
+                tweet_data.append([tweet.date, tweet.likeCount, tweet.sourceLabel, tweet.content, tweet.id,
+                                   tweet.user.username, tweet.lang, tweet.url, tweet.inReplyToUser, tweet.retweetCount])
+
+
+
+# converting the data into pandas dataframe
+
+
+
+        df = pd.DataFrame(tweet_data, columns=[
+            "Date Created", "Number of Likes", "Source of Tweet", "Tweets", "Id", "Username", "Language", "Url",
+            "Reply count", "retweet count"])
+        test = df.astype(str)
+        d = st.dataframe(test)
+
+# Downloading dataframe as csv file
+
+
+
+        if df is not None:
+
+            def st_pandas_to_csv_download_link(df: pd.DataFrame, file_name: str = "dataframe.csv"):
+                csv_exp = df.to_csv(index=False)
+                b64 = base64.b64encode(csv_exp.encode()).decode()
+                href = f'<a href="data:file/csv;base64,{b64}" download="{file_name}" > Download Dataframe (CSV) </a>'
+                st.markdown(href, unsafe_allow_html=True)
+
+
+            st_pandas_to_csv_download_link(df, file_name="my_file.csv")
+
+           
